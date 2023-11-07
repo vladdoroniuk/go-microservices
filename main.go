@@ -1,29 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/vladdoroniuk/go-microservices/handlers"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Hello microservices!")
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Error in '/'", http.StatusBadRequest)
-			return
-		}
+	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	hh := handlers.NewHello(l)
+	gh := handlers.NewGoodbye(l)
 
-		fmt.Fprintf(w, "Body: %s\n", body)
-	})
+	mux := http.NewServeMux()
+	mux.Handle("/hello", hh)
+	mux.Handle("/goodbye", gh)
 
-	http.HandleFunc("/goodbye", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Goodbye microservices!")
-	})
-
-	if err := http.ListenAndServe(":3000", nil); err != nil {
+	if err := http.ListenAndServe(":3000", mux); err != nil {
 		log.Fatal(err.Error())
 	}
 }
